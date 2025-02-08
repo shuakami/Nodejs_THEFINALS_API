@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THEFINALS API</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">THEFINALS API</h1>
+            <p class="subtitle">简单、可靠的游戏数据查询服务</p>
+        </header>
+
+        <main class="content">
+            <section>
+                <h2>世界巡回赛</h2>
+                <div class="endpoint">
+                    <div class="endpoint-url">GET /leaderboard/{season}worldtour/{platform}</div>
+                    <div class="endpoint-desc">查询玩家世界巡回赛数据 (支持 s3-s5 赛季)</div>
+                </div>
+            </section>
+
+            <section>
+                <h2>排位系统</h2>
+                <div class="endpoint">
+                    <div class="endpoint-url">GET /leaderboard/{season}</div>
+                    <div class="endpoint-desc">查询早期赛季排位数据 (cb1, cb2)</div>
+                </div>
+                <div class="endpoint">
+                    <div class="endpoint-url">GET /leaderboard/{season}/{platform}</div>
+                    <div class="endpoint-desc">查询当前赛季排位数据 (ob, s1-s5)</div>
+                </div>
+            </section>
+
+            <section>
+                <h2>系统状态</h2>
+                <div class="endpoint">
+                    <div class="endpoint-url">GET /health</div>
+                    <div class="endpoint-desc">检查 API 服务运行状态</div>
+                </div>
+            </section>
+
+            <section class="test-area">
+                <h2>API 测试</h2>
+                <div class="test-examples">
+                    <button class="example-btn" data-path="/health">测试健康检查</button>
+                    <button class="example-btn" data-path="/leaderboard/s5/crossplay">测试S5排位</button>
+                    <button class="example-btn" data-path="/leaderboard/s5worldtour/crossplay">测试S5世界巡回赛</button>
+                </div>
+                <div class="test-form">
+                    <input type="text" class="test-input" placeholder="输入API路径，例如: /leaderboard/s5/crossplay" />
+                    <button class="test-button">发送请求</button>
+                </div>
+                <div class="test-status"></div>
+                <pre class="test-result"></pre>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const testInput = document.querySelector('.test-input');
+        const testButton = document.querySelector('.test-button');
+        const testResult = document.querySelector('.test-result');
+        const testStatus = document.querySelector('.test-status');
+
+        // 示例按钮点击事件
+        document.querySelectorAll('.example-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                testInput.value = btn.dataset.path;
+                sendRequest();
+            });
+        });
+
+        // 测试按钮点击事件
+        testButton.addEventListener('click', sendRequest);
+
+        // 输入框回车事件
+        testInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendRequest();
+            }
+        });
+
+        async function sendRequest() {
+            const path = testInput.value.trim();
+            
+            if (!path) {
+                showError('请输入API路径');
+                return;
+            }
+
+            try {
+                // 显示加载状态
+                showStatus('发送请求中...');
+                testResult.classList.add('visible');
+
+                // 发送请求
+                const startTime = Date.now();
+                const response = await fetch(path);
+                const endTime = Date.now();
+
+                // 获取响应数据
+                const data = await response.json();
+
+                // 显示响应状态
+                const duration = endTime - startTime;
+                showStatus(`
+                    状态码: ${response.status}
+                    耗时: ${duration}ms
+                    时间: ${new Date().toLocaleString()}
+                `);
+
+                // 显示响应数据
+                testResult.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                showError(`请求失败: ${error.message}`);
+            }
+        }
+
+        function showStatus(message) {
+            testStatus.textContent = message;
+            testStatus.className = 'test-status';
+            testStatus.classList.add('visible');
+        }
+
+        function showError(message) {
+            testStatus.textContent = message;
+            testStatus.className = 'test-status error';
+            testStatus.classList.add('visible');
+            testResult.classList.remove('visible');
+        }
+    </script>
+</body>
+</html> 
