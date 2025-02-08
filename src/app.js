@@ -13,6 +13,9 @@ const leaderboardRoutes = require('./routes/leaderboard');
 // 创建Express应用
 const app = express();
 
+// 在Vercel环境中信任代理
+app.set('trust proxy', 1);
+
 // 基础中间件
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -40,7 +43,9 @@ app.use(rateLimit({
     max: config.rateLimit.max,
     message: {
         message: 'Too many requests from this IP, please try again later.'
-    }
+    },
+    standardHeaders: true,
+    legacyHeaders: false
 }));
 
 // API路由
@@ -48,7 +53,15 @@ app.use('/leaderboard', leaderboardRoutes);
 
 // 健康检查
 app.get('/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+    res.json({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString(),
+        config: {
+            baseUrl: config.api.baseUrl,
+            env: process.env.NODE_ENV,
+            vercel: process.env.VERCEL === '1'
+        }
+    });
 });
 
 // 主页路由
